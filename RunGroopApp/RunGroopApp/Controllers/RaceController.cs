@@ -27,5 +27,22 @@ namespace RunGroopApp.Controllers
             Race race = await _raceService.GetIdAsync(id);
             return View(race);
         }
+
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+
+        public async Task<IActionResult> Create(Race race)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(race);
+            }
+            _raceService.Add(race);
+            return RedirectToAction("Index");
+        }
     }
 }
