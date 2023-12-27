@@ -3,7 +3,7 @@ using RunGroopApp.Data;
 using RunGroopApp.Data.Enums;
 using RunGroopApp.Models;
 
-namespace RunGroopWebApp.Data
+namespace RunGroopApp.Data
 {
 	public class Seed
 	{

@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using RunGroopApp.Data;
+using RunGroopApp.Helpers;
 using RunGroopApp.Interfaces;
 using RunGroopApp.Services;
-using RunGroopWebApp.Data;
+
 
 namespace RunGroopApp
 {
@@ -16,7 +17,9 @@ namespace RunGroopApp
 			builder.Services.AddControllersWithViews();
 			builder.Services.AddScoped<IClub, ClubService>();
 			builder.Services.AddScoped<IRace, RaceService>();
-			builder.Services.AddDbContext<AppDbContext>(options =>
+            builder.Services.AddScoped<IPhotoService, PhotoService>();
+            builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+            builder.Services.AddDbContext<AppDbContext>(options =>
 			{
 				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 			});
