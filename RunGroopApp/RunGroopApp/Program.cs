@@ -18,7 +18,7 @@ namespace RunGroopApp
 			builder.Services.AddScoped<IClub, ClubService>();
 			builder.Services.AddScoped<IRace, RaceService>();
             builder.Services.AddScoped<IPhotoService, PhotoService>();
-            builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+            builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
             builder.Services.AddDbContext<AppDbContext>(options =>
 			{
 				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
