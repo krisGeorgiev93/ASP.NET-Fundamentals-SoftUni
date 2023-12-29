@@ -65,6 +65,35 @@ namespace RunGroopApp.Controllers
             return View(clubVM);
         }
 
+      
+
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var clubDetails = await _clubService.GetIdAsync(id);
+            if (clubDetails == null) return View("Error");
+            return View(clubDetails);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        public async Task<IActionResult> DeleteClub(int id)
+        {
+            var clubDetails = await _clubService.GetIdAsync(id);
+
+            if (clubDetails == null)
+            {
+                return View("Error");
+            }
+
+            if (!string.IsNullOrEmpty(clubDetails.Image))
+            {
+                _ = _photoService.DeletePhotoAsync(clubDetails.Image);
+            }
+
+            _clubService.Delete(clubDetails);
+            return RedirectToAction("Index");
+        }
+
         //[HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
