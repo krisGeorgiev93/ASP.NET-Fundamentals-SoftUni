@@ -1,38 +1,154 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RunGroopApp.Data.Enums;
 using RunGroopApp.Interfaces;
 using RunGroopApp.Models;
 using RunGroopApp.ViewModels;
+using System.ComponentModel;
 
 
 namespace RunGroopApp.Controllers
 {
     public class ClubController : Controller
     {
-        private readonly IClub _clubService;
+        private readonly IClub _clubRepository;
         private readonly IPhotoService _photoService;
 
         public ClubController(IClub clubService, IPhotoService photoService)
         {
-            _clubService = clubService;
+            _clubRepository = clubService;
             _photoService = photoService;
         }
 
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        [Route("RunningClubs")]
+        public async Task<IActionResult> Index(int category = -1, int page = 1, int pageSize = 6)
         {
-            IEnumerable<Club> clubs = await _clubService.GetAll();
-            return View(clubs);
+            if (page < 1 || pageSize < 1)
+            {
+                return NotFound();
+            }
+
+            // if category is -1 (All) dont filter else filter by selected category
+            var clubs = category switch
+            {
+                -1 => await _clubRepository.GetSliceAsync((page - 1) * pageSize, pageSize),
+                _ => await _clubRepository.GetClubsByCategoryAndSliceAsync((ClubCategory)category, (page - 1) * pageSize, pageSize),
+            };
+
+            var count = category switch
+            {
+                -1 => await _clubRepository.GetCountAsync(),
+                _ => await _clubRepository.GetCountByCategoryAsync((ClubCategory)category),
+            };
+
+            var clubViewModel = new IndexClubViewModel
+            {
+                Clubs = clubs,
+                Page = page,
+                PageSize = pageSize,
+                TotalClubs = count,
+                TotalPages = (int)Math.Ceiling(count / (double)pageSize),
+                Category = category,
+            };
+
+            return View(clubViewModel);
         }
 
-        //[HttpGet]
-        public async Task<IActionResult> Detail(int id)
+        [HttpGet]
+        [Route("RunningClubs/{state}")]
+        public async Task<IActionResult> ListClubsByState(string state)
         {
-            Club club = await _clubService.GetIdAsync(id);
-            return View(club);
+            var clubs = await _clubRepository.GetClubsByState(StateConverter.GetStateByName(state).ToString());
+            var clubVM = new ListClubByStateViewModel()
+            {
+                Clubs = clubs
+            };
+            if (clubs.Count() == 0)
+            {
+                clubVM.NoClubWarning = true;
+            }
+            else
+            {
+                clubVM.State = state;
+            }
+            return View(clubVM);
         }
 
+        [HttpGet]
+        [Route("RunningClubs/{city}/{state}")]
+        public async Task<IActionResult> ListClubsByCity(string city, string state)
+        {
+            var clubs = await _clubRepository.GetClubByCity(city);
+            var clubVM = new ListClubByCityViewModel()
+            {
+                Clubs = clubs
+            };
+            if (clubs.Count() == 0)
+            {
+                clubVM.NoClubWarning = true;
+            }
+            else
+            {
+                clubVM.State = state;
+                clubVM.City = city;
+            }
+            return View(clubVM);
+        }
+
+        [HttpGet]
+        [Route("club/{runningClub}/{id}")]
+        public async Task<IActionResult> DetailClub(int id, string runningClub)
+        {
+            var club = await _clubRepository.GetByIdAsync(id);
+
+            return club == null ? NotFound() : View(club);
+        }
+
+        [HttpGet]
+        [Route("RunningClubs/State")]
+        public async Task<IActionResult> RunningClubsByStateDirectory()
+        {
+            var states = await _clubRepository.GetAllStates();
+            var clubVM = new RunningClubByState()
+            {
+                States = states
+            };
+
+            return states == null ? NotFound() : View(clubVM);
+        }
+
+        [HttpGet]
+        [Route("RunningClubs/State/City")]
+        public async Task<IActionResult> RunningClubsByStateForCityDirectory()
+        {
+            var states = await _clubRepository.GetAllStates();
+            var clubVM = new RunningClubByState()
+            {
+                States = states
+            };
+
+            return states == null ? NotFound() : View(clubVM);
+        }
+
+        [HttpGet]
+        [Route("RunningClubs/{state}/City")]
+        public async Task<IActionResult> RunningClubsByCityDirectory(string state)
+        {
+            var cities = await _clubRepository.GetAllCitiesByState(StateConverter.GetStateByName(state).ToString());
+            var clubVM = new RunningClubByCity()
+            {
+                Cities = cities
+            };
+
+            return cities == null ? NotFound() : View(clubVM);
+        }
+
+        [HttpGet]
         public IActionResult Create()
         {
-            return View();
+            var curUserId = HttpContext.User.GetUserId();
+            var createClubViewModel = new CreateClubViewModel { AppUserId = curUserId };
+            return View(createClubViewModel);
         }
 
         [HttpPost]
@@ -47,6 +163,8 @@ namespace RunGroopApp.Controllers
                     Title = clubVM.Title,
                     Description = clubVM.Description,
                     Image = result.Url.ToString(),
+                    ClubCategory = clubVM.ClubCategory,
+                    AppUserId = clubVM.AppUserId,
                     Address = new Address
                     {
                         Street = clubVM.Address.Street,
@@ -54,7 +172,7 @@ namespace RunGroopApp.Controllers
                         State = clubVM.Address.State,
                     }
                 };
-                _clubService.Add(club);
+                _clubRepository.Add(club);
                 return RedirectToAction("Index");
             }
             else
@@ -65,12 +183,71 @@ namespace RunGroopApp.Controllers
             return View(clubVM);
         }
 
-      
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var club = await _clubRepository.GetByIdAsync(id);
+            if (club == null) return View("Error");
+            var clubVM = new EditClubViewModel
+            {
+                Title = club.Title,
+                Description = club.Description,
+                AddressId = club.AddressId,
+                Address = club.Address,
+                URL = club.Image,
+                ClubCategory = club.ClubCategory
+            };
+            return View(clubVM);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, EditClubViewModel clubVM)
+        {
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError("", "Failed to edit club");
+                return View("Edit", clubVM);
+            }
+
+            var userClub = await _clubRepository.GetByIdAsyncNoTracking(id);
+
+            if (userClub == null)
+            {
+                return View("Error");
+            }
+
+            var photoResult = await _photoService.AddPhotoAsync(clubVM.Image);
+
+            if (photoResult.Error != null)
+            {
+                ModelState.AddModelError("Image", "Photo upload failed");
+                return View(clubVM);
+            }
+
+            if (!string.IsNullOrEmpty(userClub.Image))
+            {
+                _ = _photoService.DeletePhotoAsync(userClub.Image);
+            }
+
+            var club = new Club
+            {
+                Id = id,
+                Title = clubVM.Title,
+                Description = clubVM.Description,
+                Image = photoResult.Url.ToString(),
+                AddressId = clubVM.AddressId,
+                Address = clubVM.Address,
+            };
+
+            _clubRepository.Update(club);
+
+            return RedirectToAction("Index");
+        }
 
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var clubDetails = await _clubService.GetIdAsync(id);
+            var clubDetails = await _clubRepository.GetByIdAsync(id);
             if (clubDetails == null) return View("Error");
             return View(clubDetails);
         }
@@ -78,7 +255,7 @@ namespace RunGroopApp.Controllers
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteClub(int id)
         {
-            var clubDetails = await _clubService.GetIdAsync(id);
+            var clubDetails = await _clubRepository.GetByIdAsync(id);
 
             if (clubDetails == null)
             {
@@ -90,74 +267,8 @@ namespace RunGroopApp.Controllers
                 _ = _photoService.DeletePhotoAsync(clubDetails.Image);
             }
 
-            _clubService.Delete(clubDetails);
+            _clubRepository.Delete(clubDetails);
             return RedirectToAction("Index");
-        }
-
-        //[HttpGet]
-        public async Task<IActionResult> Edit(int id)
-        {
-            var club = await _clubService.GetIdAsync(id);
-            if (club == null)
-            {
-                return View("Error");
-            }
-
-            var clubVM = new EditClubViewModel
-            {
-                Title = club.Title,
-                Description = club.Description,
-                AddressId = (int)club.AddressId,
-                Address = club.Address,
-                URL = club.Image,
-                ClubCategory = club.ClubCategory
-            };
-            return View(clubVM);
-        }
-
-
-        [HttpPost]
-        public async Task<IActionResult> Edit(int id, EditClubViewModel clubVM)
-        {
-            if (!ModelState.IsValid)
-            {
-                ModelState.AddModelError("", "Failed to edit club");
-                return View("Edit", clubVM);
-            }
-
-            var userClub = await _clubService.GetIdAsyncNoTracking(id);
-            if (userClub != null)
-            {
-                try
-                {
-                    await _photoService.DeletePhotoAsync(userClub.Image);
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Could not delete photo");
-                    return View(clubVM);
-                }
-                var photoResult = await _photoService.AddPhotoAsync(clubVM.Image);
-
-                var club = new Club
-                {
-                    Id = id,
-                    Title = clubVM.Title,
-                    Description = clubVM.Description,
-                    Image = photoResult.Url.ToString(),
-                    AddressId = clubVM.AddressId,
-                    Address = clubVM.Address
-                };
-
-                _clubService.Update(club);
-
-                return RedirectToAction("Index");
-            }
-            else
-            {
-                return View(clubVM);
-            }
-
         }
     }
 }
