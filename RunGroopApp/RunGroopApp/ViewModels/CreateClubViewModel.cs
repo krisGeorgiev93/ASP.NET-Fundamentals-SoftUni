@@ -1,5 +1,6 @@
 ﻿using RunGroopApp.Data.Enums;
 using RunGroopApp.Models;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RunGroopApp.ViewModels
 {
@@ -11,6 +12,8 @@ namespace RunGroopApp.ViewModels
         public Address Address { get; set; }
         public IFormFile Image { get; set; }
         public ClubCategory ClubCategory { get; set; }
-   
+        public string AppUserId { get; set; }
+
+
     }
 }

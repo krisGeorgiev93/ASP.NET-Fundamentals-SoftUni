@@ -19,130 +19,7 @@ namespace RunGroopApp.Controllers
             _photoService = photoService;
         }
 
-        [HttpGet]
-        [Route("RunningClubs")]
-        public async Task<IActionResult> Index(int category = -1, int page = 1, int pageSize = 6)
-        {
-            if (page < 1 || pageSize < 1)
-            {
-                return NotFound();
-            }
-
-            // if category is -1 (All) dont filter else filter by selected category
-            var clubs = category switch
-            {
-                -1 => await _clubRepository.GetSliceAsync((page - 1) * pageSize, pageSize),
-                _ => await _clubRepository.GetClubsByCategoryAndSliceAsync((ClubCategory)category, (page - 1) * pageSize, pageSize),
-            };
-
-            var count = category switch
-            {
-                -1 => await _clubRepository.GetCountAsync(),
-                _ => await _clubRepository.GetCountByCategoryAsync((ClubCategory)category),
-            };
-
-            var clubViewModel = new IndexClubViewModel
-            {
-                Clubs = clubs,
-                Page = page,
-                PageSize = pageSize,
-                TotalClubs = count,
-                TotalPages = (int)Math.Ceiling(count / (double)pageSize),
-                Category = category,
-            };
-
-            return View(clubViewModel);
-        }
-
-        [HttpGet]
-        [Route("RunningClubs/{state}")]
-        public async Task<IActionResult> ListClubsByState(string state)
-        {
-            var clubs = await _clubRepository.GetClubsByState(StateConverter.GetStateByName(state).ToString());
-            var clubVM = new ListClubByStateViewModel()
-            {
-                Clubs = clubs
-            };
-            if (clubs.Count() == 0)
-            {
-                clubVM.NoClubWarning = true;
-            }
-            else
-            {
-                clubVM.State = state;
-            }
-            return View(clubVM);
-        }
-
-        [HttpGet]
-        [Route("RunningClubs/{city}/{state}")]
-        public async Task<IActionResult> ListClubsByCity(string city, string state)
-        {
-            var clubs = await _clubRepository.GetClubByCity(city);
-            var clubVM = new ListClubByCityViewModel()
-            {
-                Clubs = clubs
-            };
-            if (clubs.Count() == 0)
-            {
-                clubVM.NoClubWarning = true;
-            }
-            else
-            {
-                clubVM.State = state;
-                clubVM.City = city;
-            }
-            return View(clubVM);
-        }
-
-        [HttpGet]
-        [Route("club/{runningClub}/{id}")]
-        public async Task<IActionResult> DetailClub(int id, string runningClub)
-        {
-            var club = await _clubRepository.GetByIdAsync(id);
-
-            return club == null ? NotFound() : View(club);
-        }
-
-        [HttpGet]
-        [Route("RunningClubs/State")]
-        public async Task<IActionResult> RunningClubsByStateDirectory()
-        {
-            var states = await _clubRepository.GetAllStates();
-            var clubVM = new RunningClubByState()
-            {
-                States = states
-            };
-
-            return states == null ? NotFound() : View(clubVM);
-        }
-
-        [HttpGet]
-        [Route("RunningClubs/State/City")]
-        public async Task<IActionResult> RunningClubsByStateForCityDirectory()
-        {
-            var states = await _clubRepository.GetAllStates();
-            var clubVM = new RunningClubByState()
-            {
-                States = states
-            };
-
-            return states == null ? NotFound() : View(clubVM);
-        }
-
-        [HttpGet]
-        [Route("RunningClubs/{state}/City")]
-        public async Task<IActionResult> RunningClubsByCityDirectory(string state)
-        {
-            var cities = await _clubRepository.GetAllCitiesByState(StateConverter.GetStateByName(state).ToString());
-            var clubVM = new RunningClubByCity()
-            {
-                Cities = cities
-            };
-
-            return cities == null ? NotFound() : View(clubVM);
-        }
-
+       
         [HttpGet]
         public IActionResult Create()
         {
@@ -164,7 +41,7 @@ namespace RunGroopApp.Controllers
                     Description = clubVM.Description,
                     Image = result.Url.ToString(),
                     ClubCategory = clubVM.ClubCategory,
-                    AppUserId = clubVM.AppUserId,
+                    UserId = clubVM.AppUserId,
                     Address = new Address
                     {
                         Street = clubVM.Address.Street,
@@ -192,7 +69,7 @@ namespace RunGroopApp.Controllers
             {
                 Title = club.Title,
                 Description = club.Description,
-                AddressId = club.AddressId,
+                AddressId = (int)club.AddressId,
                 Address = club.Address,
                 URL = club.Image,
                 ClubCategory = club.ClubCategory
