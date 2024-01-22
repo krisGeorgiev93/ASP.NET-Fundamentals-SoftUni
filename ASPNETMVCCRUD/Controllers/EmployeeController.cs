@@ -37,7 +37,7 @@ namespace ASPNETMVCCRUD.Controllers
            await demoDbContext.Employees.AddAsync(employee);
            await demoDbContext.SaveChangesAsync();
 
-            return RedirectToAction("Add");
+            return RedirectToAction("AllEmployees");
         }
 
 
@@ -46,6 +46,50 @@ namespace ASPNETMVCCRUD.Controllers
         {
             var employees = await demoDbContext.Employees.ToListAsync();
             return View(employees);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(Guid id)
+        {
+            var employee = await demoDbContext.Employees.FirstOrDefaultAsync(x => x.Id == id);
+
+            if (employee != null)
+            {
+                var viewEmployee = new EditViewModel()
+                {
+                    Id = employee.Id,
+                    Name = employee.Name,
+                    Email = employee.Email,
+                    Salary = employee.Salary,
+                    Department = employee.Department,
+                    DateOfBirth = employee.DateOfBirth
+                };
+
+                return View(viewEmployee);
+            }
+
+            return  RedirectToAction("AllEmployees");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(EditViewModel model)
+        {
+            var employee = await demoDbContext.Employees.FindAsync(model.Id);
+
+            if (employee != null)
+            {
+                employee.Name = model.Name;
+                employee.Email = model.Email;
+                employee.Salary = model.Salary;
+                employee.Department = model.Department;
+                employee.DateOfBirth = model.DateOfBirth;
+
+                await demoDbContext.SaveChangesAsync();
+
+                return RedirectToAction("AllEmployees");
+            }
+            return RedirectToAction("AllEmployees");
+
         }
     }
 }
