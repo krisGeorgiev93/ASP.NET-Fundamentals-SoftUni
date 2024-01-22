@@ -2,6 +2,7 @@
 using ASPNETMVCCRUD.Models;
 using ASPNETMVCCRUD.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ASPNETMVCCRUD.Controllers
 {
@@ -37,6 +38,14 @@ namespace ASPNETMVCCRUD.Controllers
            await demoDbContext.SaveChangesAsync();
 
             return RedirectToAction("Add");
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> AllEmployees()
+        {
+            var employees = await demoDbContext.Employees.ToListAsync();
+            return View(employees);
         }
     }
 }
