@@ -46,6 +46,7 @@ namespace Homies.Services
                 })
                 .FirstOrDefaultAsync();
         }
+       
 
         public async Task<IEnumerable<AllEventsViewModel>> GetMyJoinedEventsAsync(string userId)
         {
@@ -61,8 +62,6 @@ namespace Homies.Services
                  .ToListAsync();
 
         }
-
-
 
 
     }

@@ -92,6 +92,66 @@ namespace Homies.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var eventToEdit = await homiesDbContext.Events.FindAsync(id);
+
+            if (eventToEdit == null)
+            {
+                return BadRequest();
+            }
+
+            string currentUserId = GetUserId();
+            if (currentUserId != eventToEdit.OrganiserId)
+            {
+                return Unauthorized();
+            }
+
+            EditViewModel eventModel = new EditViewModel()
+            {
+                Name = eventToEdit.Name,
+                Description = eventToEdit.Description,
+                Start = eventToEdit.Start.ToString(),
+                End = eventToEdit.End.ToString(),
+                TypeId = eventToEdit.TypeId,
+                Types = GetTypes()
+            };
+
+            return View(eventModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, AddViewModel model)
+        {
+            var eventToEdit = await homiesDbContext.Events.FindAsync(id);
+
+            if (eventToEdit == null)
+            {
+                return BadRequest();
+            }
+
+            string currentUser = GetUserId();
+            if (currentUser != eventToEdit.OrganiserId)
+            {
+                return Unauthorized();
+            }
+
+            if (!GetTypes().Any(e => e.Id == model.TypeId))
+            {
+                ModelState.AddModelError(nameof(model.TypeId), "Type does not exist!");
+            }
+
+            eventToEdit.Name = model.Name;
+            eventToEdit.Description = model.Description;
+            eventToEdit.Start = model.Start;
+            eventToEdit.End = model.End;
+            eventToEdit.TypeId = model.TypeId;
+
+            await homiesDbContext.SaveChangesAsync();
+            return RedirectToAction("All", "Event");
+        }
+
 
         private IEnumerable<TypeViewModel> GetTypes()
            => homiesDbContext
