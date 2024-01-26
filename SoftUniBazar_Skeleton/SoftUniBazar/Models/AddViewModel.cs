@@ -5,11 +5,11 @@ namespace SoftUniBazar.Models
     public class AddViewModel
     {
         [Required]
-        [MaxLength(25)]
+        [StringLength(25, MinimumLength = 5)]
         public string Name { get; set; } = null!;
 
         [Required]
-        [MaxLength(250)]
+        [StringLength(250, MinimumLength = 15)]
         public string Description { get; set; } = null!;
 
         [Required]
@@ -19,6 +19,7 @@ namespace SoftUniBazar.Models
         public string ImageUrl { get; set; } = null!;
 
         [Required]
+        [Range(1, int.MaxValue)]
         public int CategoryId { get; set; }
 
         public IEnumerable<CategoryViewModel> Categories { get; set; } = new List<CategoryViewModel>();

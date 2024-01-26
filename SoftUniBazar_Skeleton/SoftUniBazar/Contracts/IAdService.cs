@@ -6,6 +6,9 @@ namespace SoftUniBazar.Contracts
     {
         Task AddAdAsync(AddViewModel model);
 
+        Task<AddViewModel> GetCategories();
+
+
 
 
     }
