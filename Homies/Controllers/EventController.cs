@@ -4,6 +4,7 @@ using Homies.Data.Models;
 using Homies.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Xml.Linq;
 
@@ -152,7 +153,35 @@ namespace Homies.Controllers
             return RedirectToAction("All", "Event");
         }
 
+        public async Task<IActionResult> JoinToCollection(int id)
+        {
+            var eventToAdd = await homiesDbContext
+                .Events
+                .FindAsync(id);
 
+            if (eventToAdd == null)
+            {
+                return BadRequest();
+            }
+
+            string currentUserId = GetUserId();
+
+            var entry = new EventParticipant()
+            {
+                EventId = eventToAdd.Id,
+                HelperId = currentUserId,
+            };
+
+            if (await homiesDbContext.EventsParticipants.ContainsAsync(entry))
+            {
+                return RedirectToAction("Joined", "Event");
+            }
+
+            await homiesDbContext.EventsParticipants.AddAsync(entry);
+            await homiesDbContext.SaveChangesAsync();
+
+            return RedirectToAction("Joined", "Event");
+        }
         private IEnumerable<TypeViewModel> GetTypes()
            => homiesDbContext
                .Types
