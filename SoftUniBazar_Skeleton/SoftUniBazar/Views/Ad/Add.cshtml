@@ -1,0 +1,51 @@
+﻿@*@{
+    viewbag.title = "create a new ad";
+}
+
+<h2 class="text-center">@viewbag.title</h2>
+<hr />
+
+<div class="row">
+    <div class="col-sm-12 offset-lg-2 col-lg-8 offset-xl-3 col-xl-6">
+        <form asp-action="add" method="post">
+            <div class="mb-3">
+                <label asp-for="@model.name" class="form-label-add-edit">name</label>
+                <input asp-for="@model.name" class="form-control" aria-required="true" />
+                <span asp-validation-for="@model.name" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="@model.description" class="form-label-add-edit">description</label>
+                <textarea asp-for="@model.description" class="form-control" aria-required="true" rows="5"></textarea>
+                <span asp-validation-for="description" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="@model.imageurl" class="form-label-add-edit">image url</label>
+                <input asp-for="@model.imageurl" class="form-control" aria-required="true" />
+                <span asp-validation-for="@model.imageurl" class="text-danger"></span>
+            </div>
+             <div class="mb-3">
+                <label asp-for="@model.price" class="form-label-add-edit">price</label>
+                <input asp-for="@model.price" class="form-control" aria-required="true" rows="5" />
+                <span asp-validation-for="description" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="@model.categoryid" class="form-label-add-edit">category</label>
+                <select asp-for="@model.categoryid" class="form-control" aria-required="true">
+                    @foreach (var type in model.categories)
+                    {
+                        <option value="@type.id">@type.name</option>
+                    }
+                </select>
+                <span asp-validation-for="@model.categoryid" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <input class="btn btn-warning mb-2 w-100 p-3 fw-bold" type="submit" value="add" />
+            </div>
+        </form>
+    </div>
+</div>
+
+
+@section scripts {
+    <partial name="_validationscriptspartial" />
+}*@
