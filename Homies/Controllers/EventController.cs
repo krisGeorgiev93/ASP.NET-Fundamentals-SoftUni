@@ -152,8 +152,26 @@ namespace Homies.Controllers
             await homiesDbContext.SaveChangesAsync();
             return RedirectToAction("All", "Event");
         }
+        public async Task<IActionResult> Leave(int id)
+        {
+            var eventId = id;
+            var currentUser = GetUserId();
 
-        public async Task<IActionResult> JoinToCollection(int id)
+            var eventToLeave = homiesDbContext.Events.FindAsync(eventId);
+
+            if (eventToLeave == null)
+            {
+                return BadRequest();
+            }
+
+            var entry = await homiesDbContext.EventsParticipants.FirstOrDefaultAsync(ep => ep.HelperId == currentUser && ep.EventId == eventId);
+            homiesDbContext.EventsParticipants.Remove(entry);
+            await homiesDbContext.SaveChangesAsync();
+
+            return RedirectToAction("All", "Event");
+        }
+
+        public async Task<IActionResult> Join(int id)
         {
             var eventToAdd = await homiesDbContext
                 .Events
