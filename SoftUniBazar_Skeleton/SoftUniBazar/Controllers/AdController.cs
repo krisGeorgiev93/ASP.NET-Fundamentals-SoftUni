@@ -68,6 +68,7 @@ namespace SoftUniBazar.Controllers
             var adsToDisplay = await dbContext.Ads.
                 Select(a => new AdViewShortModel()
                 {
+                    Id = a.Id,
                     Name = a.Name,
                     Description = a.Description,
                     CreatedOn = a.CreatedOn.ToString("dd/MM/yyyy H:mm"),
