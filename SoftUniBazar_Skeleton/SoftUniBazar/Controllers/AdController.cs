@@ -154,6 +154,69 @@ namespace SoftUniBazar.Controllers
             return RedirectToAction("All", "Ad");
         }
 
+        public async Task<IActionResult> Edit(int id)
+        {
+            var adToEdit = await dbContext.Ads.FindAsync(id);
+
+            if (adToEdit == null)
+            {
+                return BadRequest();
+            }
+
+            string currentUser = GetUserId();
+
+            if (currentUser != adToEdit.OwnerId)
+            {
+                return Unauthorized();
+            }
+
+            AddViewModel adViewModel = new AddViewModel()
+            {
+                Name = adToEdit.Name,
+                Description = adToEdit.Description,
+                ImageUrl = adToEdit.ImageUrl,
+                Price = adToEdit.Price,
+                Categories = GetCategories()
+            };
+
+            return View(adViewModel);
+            
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, AddViewModel model)
+        {
+            var adToEdit = await dbContext.Ads.FindAsync(id);
+
+            if (adToEdit == null)
+            {
+                return BadRequest();
+            }
+
+            var currentUser = GetUserId();
+
+            if (currentUser != adToEdit.OwnerId)
+            {
+                return Unauthorized();
+            }
+
+            if (!GetCategories().Any(a=> a.Id == model.CategoryId))
+            {
+                ModelState.AddModelError(nameof(model.CategoryId), "Category does not exist!");
+            }
+
+            adToEdit.Name = model.Name;
+            adToEdit.Description = model.Description;
+            adToEdit.ImageUrl = model.ImageUrl;
+            adToEdit.Price = model.Price;
+            adToEdit.CategoryId = model.CategoryId;
+
+            await dbContext.SaveChangesAsync();
+            return RedirectToAction("All", "Ad");
+
+        }
+
 
         // Helper methods
 
