@@ -134,6 +134,26 @@ namespace SoftUniBazar.Controllers
             return View(userCart);
         }
 
+        public async Task<IActionResult> RemoveFromCart(int id)
+        {
+            var adId = id;
+            var currentUser = GetUserId();
+
+            var targetAd = await dbContext.Ads.FindAsync(adId);
+
+            if (targetAd == null)
+            {
+                return BadRequest();
+            }
+
+            var adToRemove = await dbContext.AdsBuyers.FirstOrDefaultAsync(ab=> ab.AdId == adId && ab.BuyerId == currentUser);
+
+            dbContext.AdsBuyers.Remove(adToRemove);
+            dbContext.SaveChangesAsync();
+
+            return RedirectToAction("All", "Ad");
+        }
+
 
         // Helper methods
 
