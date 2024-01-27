@@ -112,6 +112,29 @@ namespace SoftUniBazar.Controllers
             return RedirectToAction("Cart", "Ad");
         }
 
+        public async Task<IActionResult> Cart()
+        {
+            string currentUser = GetUserId();
+
+            var userCart = await dbContext
+                .AdsBuyers
+                .Where(ab => ab.BuyerId == currentUser)
+                .Select(ab => new AdViewShortModel()
+                {
+                    Id = ab.Ad.Id,
+                    Name = ab.Ad.Name,
+                    ImageUrl = ab.Ad.ImageUrl,
+                    CreatedOn = ab.Ad.CreatedOn.ToString("dd-MM-yyyy H:mm"),
+                    Description = ab.Ad.Description,
+                    Price = ab.Ad.Price,
+                    Owner = ab.Ad.Owner.UserName                    
+                })
+                .ToListAsync();
+
+            return View(userCart);
+        }
+
+
         // Helper methods
 
         // Get Categories
