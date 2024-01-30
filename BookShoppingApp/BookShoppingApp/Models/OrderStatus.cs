@@ -5,9 +5,9 @@ namespace BookShoppingApp.Models
     public class OrderStatus
     {
         public int Id { get; set; }
-
-        [MaxLength(20)]
         [Required]
-        public string StatusName { get; set; } = null!;
+        public int StatusId { get; set; }
+        [Required, MaxLength(20)]
+        public string? StatusName { get; set; }
     }
 }
