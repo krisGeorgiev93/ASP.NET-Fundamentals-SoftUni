@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
+using BookShoppingApp.Constants;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -120,6 +121,7 @@ namespace BookShoppingApp.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
+                    await _userManager.AddToRoleAsync(user, Roles.User.ToString());
                     _logger.LogInformation("User created a new account with password.");
 
                     var userId = await _userManager.GetUserIdAsync(user);
