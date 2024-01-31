@@ -20,6 +20,12 @@ namespace BookShoppingApp
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddControllersWithViews();
 
+            builder.Services
+    .AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultUI()
+    .AddDefaultTokenProviders();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
